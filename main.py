@@ -5,7 +5,7 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Created FastAPI project. Gotta implement DB now."}
 
 
 @app.get("/hello/{name}")
