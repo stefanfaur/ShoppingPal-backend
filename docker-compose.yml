@@ -6,8 +6,7 @@ services:
     build:
       context: api
     depends_on:
-      receiptdb:
-        condition: service_healthy
+      - receiptdb
     ports:
       - 8000:80
     restart: always
@@ -23,9 +22,5 @@ services:
       - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     ports:
       - 5432:5432
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shopa"]
-      interval: 1s
-      timeout: 5s
-      retries: 5
+   
 
