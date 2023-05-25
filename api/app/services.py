@@ -1,6 +1,8 @@
 from sqlmodel import SQLModel, create_engine
 from dotenv import load_dotenv
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import select
+from sqlalchemy.orm import Session, sessionmaker, joinedload
+from typing import List
 from datetime import datetime
 from app.models import Receipt, Item
 import os
@@ -28,3 +30,13 @@ def add_item_to_receipt(db: Session, receipt_id: int, name: str, count: int, pri
     db.commit()
     db.refresh(new_item)
     return new_item
+
+def get_user_receipts(db: Session, user_id: str) -> List[Receipt]:
+    result = db.execute(select(Receipt).where(Receipt.user_id == user_id))
+    return result.scalars().all()
+
+def get_receipt_with_items(db: Session, receipt_id: int) -> Receipt:
+    result = db.execute(
+        select(Receipt).options(joinedload(Receipt.items)).where(Receipt.id == receipt_id)
+    )
+    return result.scalars().first()

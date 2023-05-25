@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, Field
 from datetime import datetime
 from pydantic import BaseModel
 from typing import List
-
+from sqlmodel import Field, Relationship
 
 class Receipt(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -11,6 +11,7 @@ class Receipt(SQLModel, table=True):
     total: float
     date: datetime = Field(default=datetime.now())
     user_id: str
+    items: List["Item"] = Relationship(back_populates="receipt")
     class Config:
         orm_mode = True
     
@@ -20,6 +21,8 @@ class Item(SQLModel, table=True):
     name: str
     count: int
     price: float
+    receipt: Receipt = Relationship(back_populates="items")
+
     
 #define models to work with JSON
 class ItemJ(BaseModel):
