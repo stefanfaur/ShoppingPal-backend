@@ -1,12 +1,14 @@
 import requests
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from app.models import Receipt, Item, ReceiptJ, ItemJ
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from app.models import ReceiptJ, Receipt
 from app.services import engine, create_db_and_tables
 from app.services import add_receipt, add_item_to_receipt
+from app.services import get_user_receipts, get_receipt_with_items
 from app.services import SessionLocal
 from datetime import date as dated
+from typing import List
 
 #fixing this when login is implemented
 user_id = "1"
@@ -27,7 +29,15 @@ app.add_middleware(
 def on_startup():
     create_db_and_tables()
     
-db = SessionLocal()
+#db = SessionLocal()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 app = FastAPI()
 
@@ -39,6 +49,11 @@ async def upload_image(file: UploadFile = File(...)):
     
     #extract stuff from the response
     receipts = response.json()['receipts']
+    success = response.json()['success']
+    
+    if success == False:
+        raise HTTPException(status_code=400, detail="OCR failed, check quota")
+    
     merchant = receipts[0]['merchant_name']
     date = receipts[0]['date'] if receipts[0]['date'] is not None else dated.today()
     items = receipts[0]['items']
@@ -59,11 +74,9 @@ async def upload_image(file: UploadFile = File(...)):
             "total": total,
             "items": formatted_items,
     }
-
-    
     
 @app.post("/save-receipt/")
-async def save_receipt(receipt: Receipt):
+async def save_receipt(receipt: ReceiptJ, db: Session = Depends(get_db)):
     merchant = receipt.merchant_name
     date = receipt.date
     total = receipt.total
@@ -78,4 +91,18 @@ async def save_receipt(receipt: Receipt):
 
         add_item_to_receipt(db, new_receipt.id, description, qty, unitPrice)
 
-    return {"status": "success"}
+    return {"status": "success"} 
+
+@app.get("/receipts/{user_id}", response_model=List[Receipt])
+def read_user_receipts(user_id: str, db: Session = Depends(get_db)):
+    receipts = get_user_receipts(db, user_id)
+    if receipts is None:
+        raise HTTPException(status_code=404, detail="Receipts not found")
+    return receipts
+
+@app.get("/receipts/{receipt_id}/items", response_model=Receipt)
+def read_receipt_with_items(receipt_id: int, db: Session = Depends(get_db)):
+    receipt = get_receipt_with_items(db, receipt_id)
+    if receipt is None:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    return receipt
