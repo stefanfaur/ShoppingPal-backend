@@ -1,5 +1,7 @@
 from sqlmodel import SQLModel, Field
 from datetime import datetime
+from pydantic import BaseModel
+from typing import List
 
 
 class Receipt(SQLModel, table=True):
@@ -18,3 +20,15 @@ class Item(SQLModel, table=True):
     name: str
     count: int
     price: float
+    
+#define models to work with JSON
+class ItemJ(BaseModel):
+    description: str
+    qty: int
+    unitPrice: float
+
+class ReceiptJ(BaseModel):
+    merchant_name: str
+    date: str
+    total: float
+    items: List[ItemJ]
