@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from app.models import Receipt, Item, ReceiptJ, ItemJ
 from app.services import engine, create_db_and_tables
 from app.services import add_receipt, add_item_to_receipt
-from app.services import SessionLocal, get_db
+from app.services import SessionLocal
 from datetime import date as dated
 
 #fixing this when login is implemented
