@@ -13,21 +13,18 @@ from datetime import date as dated
 from typing import List
 from app.routers import upload, submit, get_receipt_items, get_user_receipts
 
-#fixing this when login is implemented
-user_id = "1"
-
 app = FastAPI()
+
+#create db and schema if it doesn't exist on startup
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
 #include routes
 app.include_router(submit.router)
 app.include_router(upload.router)
 app.include_router(get_receipt_items.router)
 app.include_router(get_user_receipts.router)
-
-#create db and schema if it doesn't exist on startup
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
 
 #define authorizations for middleware components
 app.add_middleware(

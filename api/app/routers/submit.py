@@ -6,11 +6,9 @@ from app.services.db_interaction import add_item_to_receipt, add_receipt
 
 router = APIRouter()
 
-#temp user ID, until auth is implemented
-user_id = 1
-
+# 1 is the default user_id, here for debugging purposes(should never be used)
 @router.post("/save-receipt/")
-async def save_receipt(receipt: ReceiptJ, db: Session = Depends(get_db)):
+async def save_receipt(receipt: ReceiptJ, db: Session = Depends(get_db), user_id: int = "1"):
     merchant = receipt.merchant_name 
     date = receipt.date
     total = receipt.total

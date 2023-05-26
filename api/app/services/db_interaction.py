@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker, joinedload
 from typing import List
 from datetime import datetime
-from app.models.sql_models import Receipt, Item
+from app.models.sql_models import Receipt, Item, User
 import os
 
 load_dotenv()
