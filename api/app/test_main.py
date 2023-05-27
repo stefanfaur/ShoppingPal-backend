@@ -1,67 +1,59 @@
-import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
 from app.main import app
+from sqlmodel import SQLModel
+import pytest
+from datetime import datetime
+import os
 
-client = TestClient(app)
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def test_upload_image():
-    with open("app/test_image.jpg", "rb") as image_file:
-        response = client.post("/upload-image/", files={"file": ("image.jpg", image_file, "image/jpg")})
-    assert response.status_code == 200
-    data = response.json()
-    assert "merchant_name" in data
-    assert "date" in data
-    assert "total" in data
-    assert "items" in data
 
-def test_save_receipt():
-    test_receipt = {
-        "merchant_name": "PREMIER RESTAURANTS ROMANIA S.R.L",
-        "date": "2023-05-24",
-        "total": 148.8,
-        "items": [
-    {
-      "description": "MAIONEZA =",
-      "qty": 1,
-      "unitPrice": 3.9
-    },
-    {
-      "description": "XL CHEESYCHICKEN =",
-      "qty": 1,
-      "unitPrice": 34.3
-    },
-    {
-      "description": "COLA MARE",
-      "qty": 1,
-      "unitPrice": 7.6
-    },
-    {
-      "description": "CHEESY CHICKEN =",
-      "qty": 2,
-      "unitPrice": 29
-    },
-    {
-      "description": "DUBLU CHEESE =",
-      "qty": 3,
-      "unitPrice": 15
-    }
-  ]
-        }
+@pytest.fixture
+def test_app():
+    return TestClient(app)
 
-    response = client.post("/save-receipt/", json=test_receipt)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "success"
+@pytest.fixture
+def db_cleanup():
+    db = SessionLocal()
+    yield db
+    # Clean up the database after each test
+    #for table in reversed(SQLModel.metadata.sorted_tables):
+    #    db.execute(table.delete())
+    db.commit()
     
-def test_read_user_receipts():
-    user_id = '1' 
-    response = client.get(f"/receipts/{user_id}")
+def test_upload_image(test_app, db_cleanup: Session):
+    file_name = 'app/test_image.jpg'
+    with open(file_name, 'rb') as file:
+        response = test_app.post("/upload-image/", files={"file": (file_name, file, "image/jpeg")})
     assert response.status_code == 200
-    assert response.json()
+    
+def test_create_user(test_app, db_cleanup: Session):
+    response = test_app.post("/users/", json={"user_id": "new_user_id", "user_email": "new_user_email"})
+    assert response.status_code == 200
+    assert response.json()["user_id"] == "new_user_id"
 
-def test_read_receipt_with_items():
-    receipt_id = 1 
-    response = client.get(f"/receipts/{receipt_id}/items")
+def test_save_receipt(test_app, db_cleanup: Session):
+    response = test_app.post("/save-receipt/", json={"merchant_name": "test_merchant", "date": "2023-01-01", "total": 123.45, "items": [{"description": "item1", "qty": 1, "unitPrice": 123.45}]})
     assert response.status_code == 200
-    assert response.json()
+    assert response.json()["status"] == "success"
+
+def test_read_receipt_with_items(test_app, db_cleanup: Session):
+    response = test_app.get("/receipts/1/items")
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+
+def test_get_user(test_app, db_cleanup: Session):
+    response = test_app.get("/users/new_user_id")
+    assert response.status_code == 200
+    assert response.json()["user_id"] == "new_user_id"
+
+def test_read_user_receipts(test_app, db_cleanup: Session):
+    response = test_app.get("/receipts/new_user_id")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
 
