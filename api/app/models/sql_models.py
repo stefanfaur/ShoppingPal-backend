@@ -2,10 +2,11 @@ from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime
 from typing import List
 
-class User(SQLModel, table=True):
-    user_id: str = Field(default="1 ", primary_key=True)
+class Userd(SQLModel, table=True):
+    user_id: str = Field(default="1", primary_key=True)
     is_admin: bool = Field(default=False)
-    receipts: List["Receipt"] = Relationship(back_populates="user")
+    user_email: str
+    receipts: List["Receipt"] = Relationship(back_populates="userd")
 
 
 class Receipt(SQLModel, table=True):
@@ -14,9 +15,9 @@ class Receipt(SQLModel, table=True):
     shop_name: str
     total: float
     date: datetime 
-    user_id: str = Field(default=None, foreign_key="user.user_id")
+    user_id: str = Field(default=None, foreign_key="userd.user_id")
     items: List["Item"] = Relationship(back_populates="receipt")
-    user: "User" = Relationship(back_populates="receipts")
+    userd: "Userd" = Relationship(back_populates="receipts")
     class Config:
         orm_mode = True
 

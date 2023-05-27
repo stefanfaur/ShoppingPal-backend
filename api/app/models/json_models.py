@@ -11,3 +11,8 @@ class ReceiptJ(BaseModel):
     date: str
     total: float
     items: List[ItemJ]
+    
+class UserJ(BaseModel):
+    user_id: str
+    user_email: str
+

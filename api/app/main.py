@@ -11,7 +11,7 @@ from app.services.db_interaction import SessionLocal
 from app.services.get_db import get_db
 from datetime import date as dated
 from typing import List
-from app.routers import upload, submit, get_receipt_items, get_user_receipts
+from app.routers import upload, submit, get_receipt_items, get_user_receipts, get_user, login
 
 app = FastAPI()
 
@@ -25,6 +25,8 @@ app.include_router(submit.router)
 app.include_router(upload.router)
 app.include_router(get_receipt_items.router)
 app.include_router(get_user_receipts.router)
+app.include_router(get_user.router)
+app.include_router(login.router)
 
 #define authorizations for middleware components
 app.add_middleware(
