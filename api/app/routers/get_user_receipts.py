@@ -7,9 +7,9 @@ from app.services.get_db import get_db
 
 router = APIRouter()
 
-@router.get("/receipts/{user_id}", response_model=List[Receipt])
+@router.get("/receipts/{user_id}")
 def read_user_receipts(user_id: str, db: Session = Depends(get_db)):
     receipts = get_user_receipts(db, user_id)
     if receipts is None:
         raise HTTPException(status_code=404, detail="Receipts not found")
-    return receipts
+    return {"receipts": [receipt.dict() for receipt in receipts]}

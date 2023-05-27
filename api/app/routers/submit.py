@@ -8,7 +8,7 @@ router = APIRouter()
 
 # 1 is the default user_id, here for debugging purposes(should never be used)
 @router.post("/save-receipt/")
-async def save_receipt(receipt: ReceiptJ, db: Session = Depends(get_db), user_id: int = "new_user_id"):
+async def save_receipt(user_id: str, receipt: ReceiptJ, db: Session = Depends(get_db)):
     merchant = receipt.merchant_name 
     date = receipt.date
     total = receipt.total

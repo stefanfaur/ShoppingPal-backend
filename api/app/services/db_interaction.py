@@ -35,8 +35,22 @@ def get_user_receipts(db: Session, user_id: str) -> List[Receipt]:
     result = db.execute(select(Receipt).where(Receipt.user_id == user_id))
     return result.scalars().all()
 
-def get_receipt_with_items(db: Session, receipt_id: int) -> Receipt:
-    result = db.execute(
-        select(Receipt).options(joinedload(Receipt.items)).where(Receipt.id == receipt_id)
-    )
-    return result.scalars().first()
+def get_receipt_with_items(db: Session, receipt_id: int) -> List[Item]:
+    result = db.execute(select(Item).where(Item.receipt_id == receipt_id))
+    receipt_query = db.execute(select(Receipt).where(Receipt.id == receipt_id))
+    if result is None:
+        return None
+    receipt = result.scalars().all()
+    receipt_res = receipt_query.scalars().first()
+    print(receipt)
+    return receipt
+    '''
+    return {
+        "id": receipt_id,
+        "name": receipt_res.name,
+        "shop_name": receipt_res.shop_name,
+        "total": receipt_res.total,
+        "date": receipt_res.date,
+        "items": [item.dict() for item in receipt]}
+        '''
+    

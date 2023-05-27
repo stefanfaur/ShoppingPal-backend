@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-@router.get("/receipts/{receipt_id}/items", response_model=Receipt)
+@router.get("/receipts/{receipt_id}/items")
 def read_receipt_with_items(receipt_id: int, db: Session = Depends(get_db)):
-    receipt = get_receipt_with_items(db, receipt_id)
-    if receipt is None:
+    items = get_receipt_with_items(db, receipt_id)
+    if items is None:
         raise HTTPException(status_code=404, detail="Receipt not found")
-    return receipt
+    return {"items": [item for item in items]}
